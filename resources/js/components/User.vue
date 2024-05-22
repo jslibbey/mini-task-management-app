@@ -46,9 +46,12 @@
             <td class="px-6 py-4 flex gap-2 text-right">
               <button
                 class="font-medium text-red-600 dark:text-blue-500 hover:underline"
-                @click="remove(user?.id)"
+                @click="() => {
+                  openConfirmModal = true;
+                  userId = user?.id
+                }"
               >
-                Del
+                Delete
               </button>
             </td>
           </tr>
@@ -56,15 +59,25 @@
       </table>
     </div>
   </div>
+    <modal-confirm :close="closeConfirmModal" :open="openConfirmModal" :confirm="remove" />
 </template>
 
 
 <script setup>
 import { ref, onMounted } from "vue";
 import { getUsers, deleteUser } from "@requests/user";
+import ModalConfirm from "@components/modals/Confirm.vue";
+import {useToast} from "vue-toast-notification";
 
+const toast = useToast()
 const userList = ref({});
+const openConfirmModal = ref(null)
+const userId = ref(null)
 
+const closeConfirmModal = () => {
+  openConfirmModal.value = false
+  fetchUsers()
+}
 // fetch user
 const fetchUsers = async () => {
   try {
@@ -78,9 +91,11 @@ const fetchUsers = async () => {
   }
 };
 
-const remove = async (id) => {
+const remove = async () => {
   try {
-    const result = await deleteUser(id);
+    await deleteUser(userId.value);
+    toast.success("User deleted successfully!", { position: "top-right" });
+    closeConfirmModal()
     fetchUsers()
   } catch (error) {
     console.log(error);

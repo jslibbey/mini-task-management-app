@@ -16,19 +16,9 @@ class LoginController extends Controller
         return view('auth.login');
     }
 
-    public function login(LoginRequest $request)
+    public function register()
     {
-        abort_if(!auth()->validate($credentials = $request->validated()), 404, __('auth.failed'));
-
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
- 
-            return redirect()->intended('/');
-        }
-
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
+        return view('auth.register');
     }
 
     public function logout(Request $request)

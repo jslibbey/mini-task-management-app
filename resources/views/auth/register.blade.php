@@ -1,7 +1,7 @@
 @extends('_layouts.auth')
-@section('title', 'Login')
+@section('title', 'Register')
 @section('content')
 <div>
-    <login-form />
+    <register-form />
 </div>
 @endsection

@@ -4,6 +4,7 @@ import User from "./components/User.vue";
 import UserCreate from "./components/UserCreate.vue";
 
 import Task from "./components/Task.vue";
+import TaskDetail from "./components/TaskDetail.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -27,6 +28,11 @@ const router = createRouter({
             path: '/tasks',
             name: 'tasks.list',
             component: Task
+        },
+        {
+            path: '/task/:id',
+            name: 'tasks.detail',
+            component: TaskDetail
         }
     ]
 })

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 
 
+Route::get('register', [LoginController::class, 'register'])->name('register');
 Route::get('login', [LoginController::class, 'index'])->name('login');
 Route::get('logout', [LoginController::class, 'logout']);
 

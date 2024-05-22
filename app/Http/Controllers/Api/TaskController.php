@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\TaskStatusEnum;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Task\StoreTaskRequest;
+use App\Http\Requests\Task\UpdateTaskRequest;
+use App\Http\Resources\TaskResource;
+use App\Models\Task;
 
 class TaskController extends Controller
 {
@@ -12,45 +16,34 @@ class TaskController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        return TaskResource::collection(Task::whereNull('parent_id')->get());
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreTaskRequest $request)
     {
-        //
+        $task = Task::create(array_merge($request->validated(), ['status' => TaskStatusEnum::TODO]));
+        return TaskResource::make($task);
     }
 
     /**
      * Display the specified resource.
+     *
+     * @param Task $broker
+     * @return TaskResource
      */
-    public function show(string $id)
+    public function show(string $id): TaskResource
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        $task = Task::find($id);
+        return TaskResource::make($task->load(['subTasks']));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateTaskRequest $request, string $id)
     {
         //
     }
@@ -60,6 +53,8 @@ class TaskController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $task = Task::find($id);
+        $task->delete();
+        return response()->noContent();
     }
 }

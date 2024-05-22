@@ -1,5 +1,15 @@
 <template>
-    <div class="mx-auto max-w-screen-xl p-4">
+  <div class="mx-auto max-w-screen-xl p-4">
+    <div class="my-3">
+      <button
+        @click="openCreateModal = true"
+        type="button"
+        class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+      >
+        Create task
+      </button>
+    </div>
+
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
       <table
         class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400"
@@ -8,10 +18,10 @@
           class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
         >
           <tr>
-            <th scope="col" class="px-6 py-3">Product name</th>
-            <th scope="col" class="px-6 py-3">Color</th>
-            <th scope="col" class="px-6 py-3">Category</th>
-            <th scope="col" class="px-6 py-3">Price</th>
+            <th scope="col" class="px-6 py-3">#</th>
+            <th scope="col" class="px-6 py-3">Name</th>
+            <th scope="col" class="px-6 py-3">Status</th>
+            <th scope="col" class="px-6 py-3">Description</th>
             <th scope="col" class="px-6 py-3">
               <span class="sr-only">Edit</span>
             </th>
@@ -19,74 +29,102 @@
         </thead>
         <tbody>
           <tr
+            v-for="(task, idx) in taskList"
+            :key="idx"
             class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
           >
             <th
               scope="row"
               class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
             >
-              Apple MacBook Pro 17"
+              {{ idx + 1 }}
             </th>
-            <td class="px-6 py-4">Silver</td>
-            <td class="px-6 py-4">Laptop</td>
-            <td class="px-6 py-4">$2999</td>
-            <td class="px-6 py-4 text-right">
-              <a
-                href="#"
-                class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                >Edit</a
+            <td class="px-6 py-4">
+              <router-link
+                :to="{ name: 'tasks.detail', params: { id: task?.id } }"
+                class="hover:text-blue-600 hover:underline"
               >
+                {{ task?.name }}
+              </router-link>
             </td>
-          </tr>
-          <tr
-            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-          >
-            <th
-              scope="row"
-              class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
-            >
-              Microsoft Surface Pro
-            </th>
-            <td class="px-6 py-4">White</td>
-            <td class="px-6 py-4">Laptop PC</td>
-            <td class="px-6 py-4">$1999</td>
-            <td class="px-6 py-4 text-right">
-              <a
-                href="#"
-                class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                >Edit</a
+            <td class="px-6 py-4">{{ task?.status }}</td>
+            <td class="px-6 py-4">{{ task?.description }}</td>
+            <td class="px-6 py-4 flex gap-2 text-right">
+              <button
+                class="font-medium text-red-600 dark:text-blue-500 hover:underline"
+                @click="
+                  () => {
+                    openConfirmModal = true;
+                    taskId = task?.id;
+                  }
+                "
               >
-            </td>
-          </tr>
-          <tr
-            class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-600"
-          >
-            <th
-              scope="row"
-              class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
-            >
-              Magic Mouse 2
-            </th>
-            <td class="px-6 py-4">Black</td>
-            <td class="px-6 py-4">Accessories</td>
-            <td class="px-6 py-4">$99</td>
-            <td class="px-6 py-4 text-right">
-              <a
-                href="#"
-                class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                >Edit</a
-              >
+                Delete
+              </button>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
-  </template>
-      
-      
-  <script setup>
-  
-  
-  </script>
-      
+
+  <task-create :close="closeCreateModal" :open="openCreateModal" />
+  <modal-confirm
+    :close="closeConfirmModal"
+    :open="openConfirmModal"
+    :confirm="remove"
+  />
+</template>
+
+
+<script setup>
+import { ref, onMounted } from "vue";
+import { getTasks, deleteTask } from "@requests/task";
+import TaskCreate from "@components/TaskCreate.vue";
+import ModalConfirm from "@components/modals/Confirm.vue";
+import { useToast } from "vue-toast-notification";
+import "vue-toast-notification/dist/theme-sugar.css";
+
+const toast = useToast();
+const taskList = ref({});
+const openCreateModal = ref(false);
+const openConfirmModal = ref(null);
+const taskId = ref(null);
+
+const closeCreateModal = () => {
+  openCreateModal.value = false;
+  fetchList();
+};
+
+const closeConfirmModal = () => {
+  openConfirmModal.value = false;
+  fetchList();
+};
+
+// fetch list
+const fetchList = async () => {
+  try {
+    const result = await getTasks();
+
+    if (result) {
+      taskList.value = result.data;
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const remove = async () => {
+  try {
+    const result = await deleteTask(taskId.value);
+    toast.success("Delete task successfully!", { position: "top-right" });
+    closeConfirmModal();
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+onMounted(() => {
+  fetchList();
+});
+</script>

@@ -57,37 +57,35 @@
       </button>
     </form>
 
-    <div
-      v-if="success"
-      class="p-4 my-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400"
-      role="alert"
-    >
-      <span class="font-medium">Create successfully!</span>
-    </div>
   </div>
 </template>
-      
-      
+
+
 <script setup>
 import { ref } from "vue";
 import { storeUser } from "@requests/user";
+import { useToast } from "vue-toast-notification";
+import "vue-toast-notification/dist/theme-sugar.css";
+import { useRouter } from "vue-router";
 
 const formData = ref({});
-const success = ref(false);
+const toast = useToast();
+const router = useRouter();
 
 const submit = async ({ parseServerError }) => {
-  success.value = false;
   try {
     const result = await storeUser(formData.value);
 
     if (result && result.data) {
-      success.value = true;
-      formData.value = {};
+      toast.success('User created successfully!', { position: 'top-right' });
+      router.push('/users')
     }
   } catch (error) {
-    console.log(error);
+    if (error.response && error.response.data.message) {
+      toast.error(error.response.data.message, { position: 'top-right' });
+    }
+    console.log(error.response);
   }
 };
 
 </script>
-      

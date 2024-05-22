@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::post('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/register', [AuthController::class, 'register']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -18,6 +19,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('/users', UserController::class)->except('');
 
-    Route::apiResource('/tasks', TaskController::class)->except('');
-
+    Route::apiResource('/tasks', TaskController::class);
 });
