@@ -26,6 +26,7 @@ class StoreTaskRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
+            'assignee_id' => ['nullable', 'integer'],
             'parent_id' => ['nullable', 'numeric', Rule::exists(Task::class, 'id')],
         ];
     }

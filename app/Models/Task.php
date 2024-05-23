@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Task extends Model
@@ -29,5 +30,14 @@ class Task extends Model
     public function subTasks(): HasMany
     {
         return $this->hasMany(Task::class, 'parent_id');
+    }
+
+
+    /**
+     * @return BelongsTo
+     */
+    public function assignee(): BelongsTo
+    {
+        return $this->BelongsTo(User::class, 'assignee_id');
     }
 }

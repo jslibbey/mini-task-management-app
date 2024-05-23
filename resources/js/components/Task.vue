@@ -20,8 +20,9 @@
           <tr>
             <th scope="col" class="px-6 py-3">#</th>
             <th scope="col" class="px-6 py-3">Name</th>
-            <th scope="col" class="px-6 py-3">Status</th>
             <th scope="col" class="px-6 py-3">Description</th>
+            <th scope="col" class="px-6 py-3">Status</th>
+            <th scope="col" class="px-6 py-3">Assignee</th>
             <th scope="col" class="px-6 py-3">
               <span class="sr-only">Edit</span>
             </th>
@@ -42,20 +43,33 @@
             <td class="px-6 py-4">
               <router-link
                 :to="{ name: 'tasks.detail', params: { id: task?.id } }"
-                class="hover:text-blue-600 hover:underline"
+                class="hover:text-blue-600 underline"
               >
                 {{ task?.name }}
               </router-link>
             </td>
-            <td class="px-6 py-4">{{ task?.status }}</td>
             <td class="px-6 py-4">{{ task?.description }}</td>
+            <td class="px-6 py-4">{{ task?.status }}</td>
+            <td class="px-6 py-4">{{ task?.assignee?.name ?? "--" }}</td>
             <td class="px-6 py-4 flex gap-2 text-right">
+              <button
+                class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                @click="
+                  () => {
+                    openChangeStatusModal = true;
+                    taskChosen = task;
+                  }
+                "
+              >
+                Edit
+              </button>
+
               <button
                 class="font-medium text-red-600 dark:text-blue-500 hover:underline"
                 @click="
                   () => {
                     openConfirmModal = true;
-                    taskId = task?.id;
+                    taskChosen = task;
                   }
                 "
               >
@@ -69,6 +83,11 @@
   </div>
 
   <task-create :close="closeCreateModal" :open="openCreateModal" />
+  <change-status
+    :close="closeChangeStatusModal"
+    :open="openChangeStatusModal"
+    :task="taskChosen"
+  />
   <modal-confirm
     :close="closeConfirmModal"
     :open="openConfirmModal"
@@ -81,6 +100,7 @@
 import { ref, onMounted } from "vue";
 import { getTasks, deleteTask } from "@requests/task";
 import TaskCreate from "@components/TaskCreate.vue";
+import ChangeStatus from "@components/modals/ChangeStatus.vue";
 import ModalConfirm from "@components/modals/Confirm.vue";
 import { useToast } from "vue-toast-notification";
 import "vue-toast-notification/dist/theme-sugar.css";
@@ -88,11 +108,17 @@ import "vue-toast-notification/dist/theme-sugar.css";
 const toast = useToast();
 const taskList = ref({});
 const openCreateModal = ref(false);
-const openConfirmModal = ref(null);
-const taskId = ref(null);
+const openConfirmModal = ref(false);
+const openChangeStatusModal = ref(false);
+const taskChosen = ref(null);
 
 const closeCreateModal = () => {
   openCreateModal.value = false;
+  fetchList();
+};
+
+const closeChangeStatusModal = () => {
+  openChangeStatusModal.value = false;
   fetchList();
 };
 
@@ -116,7 +142,7 @@ const fetchList = async () => {
 
 const remove = async () => {
   try {
-    const result = await deleteTask(taskId.value);
+    const result = await deleteTask(taskChosen.value?.id);
     toast.success("Delete task successfully!", { position: "top-right" });
     closeConfirmModal();
   } catch (error) {

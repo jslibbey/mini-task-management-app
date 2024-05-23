@@ -7,7 +7,7 @@
                     <form @submit.prevent="submit">
                         <!-- Modal header -->
                         <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-                            <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Create Task</h3>
+                            <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Create SubTask</h3>
                             <button
                                 type="button"
                                 class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
@@ -56,6 +56,22 @@
                                     v-model="formData.description"
                                 ></textarea>
                             </div>
+                            <div class="mb-5">
+                                <label
+                                    for="assignee"
+                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                >Select an assignee</label
+                                >
+                                <select
+                                    id="assignee"
+                                    name="assignee_id"
+                                    v-model="formData.assignee_id"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                >
+                                    <option value="">None</option>
+                                    <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
+                                </select>
+                            </div>
                         </div>
                         <!-- Modal footer -->
                         <div class="flex items-center p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600">
@@ -82,10 +98,12 @@
 </template>
 
 <script setup>
-import { ref, defineProps } from "vue";
+import {ref, defineProps, onMounted} from "vue";
 import { storeTask } from "@requests/task";
+import { getUsers } from "@requests/user";
 import { useToast } from "vue-toast-notification";
 import "vue-toast-notification/dist/theme-sugar.css";
+const users = ref([]);
 
 const props = defineProps({
     open: { type: Boolean, default: false },
@@ -98,6 +116,19 @@ const formData = ref({
     parent_id: props.parentId ? parseInt(props.parentId) : null
 });
 
+const fetchUsers = async () => {
+    try {
+        const response = await getUsers();
+        if (response && response.data) {
+            users.value = response.data;
+        }
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        toast.error("Failed to load users", { position: "top-right" });
+    }
+};
+
+onMounted(fetchUsers);
 const closeFn = () => props?.close();
 
 const submit = async () => {

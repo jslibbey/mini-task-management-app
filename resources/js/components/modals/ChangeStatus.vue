@@ -10,7 +10,7 @@
                             class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600"
                         >
                             <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-                                Create Task
+                                Update Status
                             </h3>
                             <button
                                 type="button"
@@ -39,34 +39,20 @@
                         <div class="p-4 md:p-5 space-y-4">
                             <div class="mb-5">
                                 <label
-                                    for="name"
+                                    for="status"
                                     class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                                >Name</label
+                                >Select a status</label
                                 >
-                                <input
-                                    type="text"
-                                    id="name"
-                                    name="name"
+                                <select
+                                    id="status"
+                                    name="status"
+                                    v-model="formData.status"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                    placeholder="Task title"
-                                    required
-                                    v-model="formData.name"
-                                />
-                            </div>
-                            <div class="mb-5">
-                                <label
-                                    for="description"
-                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                                >Description</label
                                 >
-                                <textarea
-                                    id="description"
-                                    rows="4"
-                                    class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                    placeholder="Task description"
-                                    required
-                                    v-model="formData.description"
-                                ></textarea>
+                                    <option value="todo">Todo</option>
+                                    <option value="inprogress">In-progress</option>
+                                    <option value="done">Done</option>
+                                </select>
                             </div>
                             <div class="mb-5">
                                 <label
@@ -99,7 +85,7 @@
                             <button
                                 data-modal-hide="default-modal"
                                 type="submit"
-                                class="text-white py-2.5 px-5 ms-3 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                                class="py-2.5 px-5 ms-3 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                             >
                                 Submit
                             </button>
@@ -112,24 +98,26 @@
 </template>
 
 <script setup>
-import {ref, defineProps, onMounted} from "vue";
-import { storeTask } from "@requests/task";
+import { ref, onMounted, defineProps } from "vue";
+import { updateTask } from "@requests/task";
 import { getUsers } from "@requests/user";
 import { useToast } from "vue-toast-notification";
 import "vue-toast-notification/dist/theme-sugar.css";
-const users = ref([]);
 
 const props = defineProps({
     open: { type: Boolean, default: false },
     close: { type: Function },
+    task: { type: Object },
 });
 
 const toast = useToast();
 const formData = ref({
-    name: '',
-    description: '',
-    assignee_id: '',
+    status: props.task?.status || '',
+    assignee_id: props.task?.assignee_id || ''
 });
+const users = ref([]);
+
+const closeFn = () => props?.close();
 
 const fetchUsers = async () => {
     try {
@@ -144,19 +132,13 @@ const fetchUsers = async () => {
 };
 
 onMounted(fetchUsers);
-const closeFn = () => props?.close();
 
 const submit = async () => {
     try {
-        const result = await storeTask(formData.value);
-
+        const result = await updateTask(parseInt(props.task?.id), formData.value);
         if (result && result.data) {
-            formData.value = {
-                name: '',
-                description: '',
-                assignee_id: '',
-            };
-            toast.success("Task created successfully!", { position: "top-right" });
+            formData.value = { status: '', assignee_id: '' };
+            toast.success("Updated successfully!", { position: "top-right" });
             props?.close();
         }
     } catch (error) {

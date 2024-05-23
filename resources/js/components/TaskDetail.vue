@@ -32,11 +32,12 @@
               <tr>
                 <th scope="col" class="px-6 py-3">#</th>
                 <th scope="col" class="px-6 py-3">Name</th>
-                <th scope="col" class="px-6 py-3">Status</th>
                 <th scope="col" class="px-6 py-3">Description</th>
-                <!-- <th scope="col" class="px-6 py-3">
+                <th scope="col" class="px-6 py-3">Status</th>
+                <th scope="col" class="px-6 py-3">Assignee</th>
+                <th scope="col" class="px-6 py-3">
                   <span class="sr-only">Edit</span>
-                </th> -->
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -59,21 +60,34 @@
                     {{ item?.name }}
                   </router-link>
                 </td>
-                <td class="px-6 py-4">{{ item?.status }}</td>
                 <td class="px-6 py-4">{{ item?.description }}</td>
-                <!-- <td class="px-6 py-4 flex gap-2 text-right">
+                <td class="px-6 py-4">{{ item?.status }}</td>
+                <td class="px-6 py-4">{{ item?.assignee?.name }}</td>
+                <td class="px-6 py-4 flex gap-2 text-right">
+                  <button
+                    class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                    @click="
+                      () => {
+                        openChangeStatusModal = true;
+                        taskChosen = item;
+                      }
+                    "
+                  >
+                    Edit
+                  </button>
+
                   <button
                     class="font-medium text-red-600 dark:text-blue-500 hover:underline"
                     @click="
                       () => {
                         openConfirmModal = true;
-                        taskId = item?.id;
+                        taskChosen = item;
                       }
                     "
                   >
                     Delete
                   </button>
-                </td> -->
+                </td>
               </tr>
             </tbody>
           </table>
@@ -81,29 +95,57 @@
       </div>
     </div>
 
-
-    <sub-task-create :close="closeCreateModal" :open="openCreateModal" :parent-id="taskId"/>
+    <sub-task-create
+      :close="closeCreateModal"
+      :open="openCreateModal"
+      :parent-id="taskId"
+    />
+    <change-status
+      :close="closeChangeStatusModal"
+      :open="openChangeStatusModal"
+      :task="taskChosen"
+    />
+    <modal-confirm
+      :close="closeConfirmModal"
+      :open="openConfirmModal"
+      :confirm="remove"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { showTask } from "@requests/task";
+import { showTask, deleteTask } from "@requests/task";
 import { useRoute } from "vue-router";
 import SubTaskCreate from "@components/SubTaskCreate.vue";
-
+import ChangeStatus from "@components/modals/ChangeStatus.vue";
+import ModalConfirm from "@components/modals/Confirm.vue";
+import { useToast } from "vue-toast-notification";
+import "vue-toast-notification/dist/theme-sugar.css";
 
 const route = useRoute();
+const toast = useToast();
 const task = ref({});
 const taskId = route.params.id;
 const openCreateModal = ref(false);
-
+const openConfirmModal = ref(false);
+const openChangeStatusModal = ref(false);
+const taskChosen = ref(null);
 
 const closeCreateModal = () => {
   openCreateModal.value = false;
   fetchTask(taskId);
 };
 
+const closeConfirmModal = () => {
+  openConfirmModal.value = false;
+  fetchTask(taskId);
+};
+
+const closeChangeStatusModal = () => {
+  openChangeStatusModal.value = false;
+  fetchTask(taskId);
+};
 
 const fetchTask = async (taskId) => {
   try {
@@ -112,6 +154,16 @@ const fetchTask = async (taskId) => {
     if (result) {
       task.value = result.data;
     }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const remove = async () => {
+  try {
+    const result = await deleteTask(taskChosen.value?.id);
+    toast.success("Delete task successfully!", { position: "top-right" });
+    closeConfirmModal();
   } catch (error) {
     console.log(error);
   }

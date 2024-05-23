@@ -20,9 +20,11 @@ class TaskResource extends JsonResource
             'description' => $this->description,
             'status' => $this->status,
             'last_status_update_at' => $this->last_status_update_at,
+            'assignee_id' => $this->assignee_id,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-            'sub_tasks' => TaskResource::collection($this->whenLoaded('subTasks'))
+            'sub_tasks' => TaskResource::collection($this->whenLoaded('subTasks')),
+            'assignee' => new UserResource($this->whenLoaded('assignee')),
         ];
     }
 }

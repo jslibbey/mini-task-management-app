@@ -25,6 +25,7 @@ class UpdateTaskRequest extends FormRequest
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['sometimes', 'string'],
             'status' => ['sometimes', 'string'],
+            'assignee_id' => ['nullable', 'integer'],
         ];
     }
 }
